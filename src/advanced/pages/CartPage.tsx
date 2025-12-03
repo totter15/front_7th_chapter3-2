@@ -1,3 +1,4 @@
+import { useCallback, useState } from "react";
 import { CartItem, Product, Coupon } from "../../types";
 
 interface ProductWithUI extends Product {
@@ -6,43 +7,113 @@ interface ProductWithUI extends Product {
 }
 
 const ProductPage = ({
-  filteredProducts,
   products,
   debouncedSearchTerm,
   getRemainingStock,
   formatPrice,
   addToCart,
   cart,
-  totals,
   updateQuantity,
   removeFromCart,
-  applyCoupon,
   selectedCoupon,
   coupons,
-  calculateItemTotal,
+  // calculateItemTotal,
   completeOrder,
   setSelectedCoupon,
+  addNotification,
 }: {
-  filteredProducts: ProductWithUI[];
   products: ProductWithUI[];
   debouncedSearchTerm: string;
   getRemainingStock: (product: ProductWithUI) => number;
   formatPrice: (price: number, productId?: string) => string;
   cart: CartItem[];
-  totals: {
-    totalBeforeDiscount: number;
-    totalAfterDiscount: number;
-  };
+
   addToCart: (product: ProductWithUI) => void;
   updateQuantity: (productId: string, newQuantity: number) => void;
   removeFromCart: (productId: string) => void;
-  applyCoupon: (coupon: Coupon) => void;
   selectedCoupon: Coupon | null;
   coupons: Coupon[];
-  calculateItemTotal: (item: CartItem) => number;
+  // calculateItemTotal: (item: CartItem) => number;
   completeOrder: () => void;
   setSelectedCoupon: (coupon: Coupon | null) => void;
+  addNotification: (message: string, type: "error" | "success" | "warning") => void;
 }) => {
+  const filteredProducts = debouncedSearchTerm
+    ? products.filter(
+        (product) =>
+          product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+          (product.description && product.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase()))
+      )
+    : products;
+
+  const calculateCartTotal = (): {
+    totalBeforeDiscount: number;
+    totalAfterDiscount: number;
+  } => {
+    let totalBeforeDiscount = 0;
+    let totalAfterDiscount = 0;
+
+    cart.forEach((item) => {
+      const itemPrice = item.product.price * item.quantity;
+      totalBeforeDiscount += itemPrice;
+      totalAfterDiscount += calculateItemTotal(item);
+    });
+
+    if (selectedCoupon) {
+      if (selectedCoupon.discountType === "amount") {
+        totalAfterDiscount = Math.max(0, totalAfterDiscount - selectedCoupon.discountValue);
+      } else {
+        totalAfterDiscount = Math.round(totalAfterDiscount * (1 - selectedCoupon.discountValue / 100));
+      }
+    }
+
+    return {
+      totalBeforeDiscount: Math.round(totalBeforeDiscount),
+      totalAfterDiscount: Math.round(totalAfterDiscount),
+    };
+  };
+
+  const applyCoupon = useCallback(
+    (coupon: Coupon) => {
+      const currentTotal = calculateCartTotal().totalAfterDiscount;
+
+      if (currentTotal < 10000 && coupon.discountType === "percentage") {
+        addNotification("percentage 쿠폰은 10,000원 이상 구매 시 사용 가능합니다.", "error");
+        return;
+      }
+
+      setSelectedCoupon(coupon);
+      addNotification("쿠폰이 적용되었습니다.", "success");
+    },
+    [addNotification, calculateCartTotal]
+  );
+
+  const getMaxApplicableDiscount = (item: CartItem): number => {
+    const { discounts } = item.product;
+    const { quantity } = item;
+
+    const baseDiscount = discounts.reduce((maxDiscount, discount) => {
+      return quantity >= discount.quantity && discount.rate > maxDiscount ? discount.rate : maxDiscount;
+    }, 0);
+
+    const hasBulkPurchase = cart.some((cartItem) => cartItem.quantity >= 10);
+    if (hasBulkPurchase) {
+      return Math.min(baseDiscount + 0.05, 0.5); // 대량 구매 시 추가 5% 할인
+    }
+
+    return baseDiscount;
+  };
+
+  const calculateItemTotal = (item: CartItem): number => {
+    const { price } = item.product;
+    const { quantity } = item;
+    const discount = getMaxApplicableDiscount(item);
+
+    return Math.round(price * quantity * (1 - discount));
+  };
+
+  const totals = calculateCartTotal();
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       <div className="lg:col-span-3">
