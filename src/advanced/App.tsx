@@ -4,41 +4,9 @@ import Header from "./components/Header";
 import Notification from "./components/Notification";
 import AdminPage from "./pages/AdminPage";
 import CartPage from "./pages/CartPage";
+import useProducts from "./hooks/useProducts";
 
 // 초기 데이터
-const initialProducts: ProductWithUI[] = [
-  {
-    id: "p1",
-    name: "상품1",
-    price: 10000,
-    stock: 20,
-    discounts: [
-      { quantity: 10, rate: 0.1 },
-      { quantity: 20, rate: 0.2 },
-    ],
-    description: "최고급 품질의 프리미엄 상품입니다.",
-  },
-  {
-    id: "p2",
-    name: "상품2",
-    price: 20000,
-    stock: 20,
-    discounts: [{ quantity: 10, rate: 0.15 }],
-    description: "다양한 기능을 갖춘 실용적인 상품입니다.",
-    isRecommended: true,
-  },
-  {
-    id: "p3",
-    name: "상품3",
-    price: 30000,
-    stock: 20,
-    discounts: [
-      { quantity: 10, rate: 0.2 },
-      { quantity: 30, rate: 0.25 },
-    ],
-    description: "대용량과 고성능을 자랑하는 상품입니다.",
-  },
-];
 
 interface ProductWithUI extends Product {
   description?: string;
@@ -61,17 +29,19 @@ const initialCoupons: Coupon[] = [
 ];
 
 const App = () => {
-  const [products, setProducts] = useState<ProductWithUI[]>(() => {
-    const saved = localStorage.getItem("products");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return initialProducts;
-      }
-    }
-    return initialProducts;
-  });
+  const products = useProducts();
+
+  const addProduct = (newProduct: Omit<ProductWithUI, "id">) => {
+    products.addProduct(newProduct, () => addNotification("상품이 추가되었습니다.", "success"));
+  };
+
+  const updateProduct = (productId: string, updates: Partial<ProductWithUI>) => {
+    products.updateProduct(productId, updates, () => addNotification("상품이 수정되었습니다.", "success"));
+  };
+
+  const deleteProduct = (productId: string) => {
+    products.deleteProduct(productId, () => addNotification("상품이 삭제되었습니다.", "success"));
+  };
 
   const [cart, setCart] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem("cart");
@@ -97,6 +67,10 @@ const App = () => {
     return initialCoupons;
   });
 
+  useEffect(() => {
+    localStorage.setItem("coupons", JSON.stringify(coupons));
+  }, [coupons]);
+
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
 
   const [isAdmin, setIsAdmin] = useState(false);
@@ -109,7 +83,7 @@ const App = () => {
   // 각 도메인 금액 formatter
   const formatPrice = (price: number, productId?: string): string => {
     if (productId) {
-      const product = products.find((p) => p.id === productId);
+      const product = products.data.find((p) => p.id === productId);
       if (product && getRemainingStock(product) <= 0) {
         return "SOLD OUT";
       }
@@ -144,14 +118,6 @@ const App = () => {
     const count = cart.reduce((sum, item) => sum + item.quantity, 0);
     setTotalItemCount(count);
   }, [cart]);
-
-  useEffect(() => {
-    localStorage.setItem("products", JSON.stringify(products));
-  }, [products]);
-
-  useEffect(() => {
-    localStorage.setItem("coupons", JSON.stringify(coupons));
-  }, [coupons]);
 
   useEffect(() => {
     if (cart.length > 0) {
@@ -209,7 +175,7 @@ const App = () => {
         return;
       }
 
-      const product = products.find((p) => p.id === productId);
+      const product = products.data.find((p) => p.id === productId);
       if (!product) return;
 
       const maxStock = product.stock;
@@ -222,7 +188,7 @@ const App = () => {
         prevCart.map((item) => (item.product.id === productId ? { ...item, quantity: newQuantity } : item))
       );
     },
-    [products, removeFromCart, addNotification, getRemainingStock]
+    [products.data, removeFromCart, addNotification, getRemainingStock]
   );
 
   const completeOrder = useCallback(() => {
@@ -251,9 +217,12 @@ const App = () => {
         {isAdmin ? (
           // PRODUCTS에 대한 수정, 삭제
           <AdminPage
-            // 공통
-            products={products}
-            setProducts={setProducts}
+            // products
+            products={products.data}
+            addProduct={addProduct}
+            updateProduct={updateProduct}
+            deleteProduct={deleteProduct}
+            //coupons
             coupons={coupons}
             setCoupons={setCoupons}
             formatPrice={formatPrice}
@@ -264,7 +233,8 @@ const App = () => {
         ) : (
           <CartPage
             // 공통
-            products={products}
+            products={products.data}
+            debouncedSearchTerm={debouncedSearchTerm}
             coupons={coupons}
             formatPrice={formatPrice}
             addNotification={addNotification}
@@ -272,7 +242,6 @@ const App = () => {
             selectedCoupon={selectedCoupon}
             setSelectedCoupon={setSelectedCoupon}
             // cart에 대해서만
-            debouncedSearchTerm={debouncedSearchTerm}
             getRemainingStock={getRemainingStock}
             cart={cart}
             addToCart={addToCart}
