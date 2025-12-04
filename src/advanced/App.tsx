@@ -6,21 +6,7 @@ import AdminPage from "./pages/AdminPage";
 import CartPage from "./pages/CartPage";
 import useProducts from "./hooks/useProducts";
 import useCart from "./hooks/useCart";
-
-const initialCoupons: Coupon[] = [
-  {
-    name: "5000원 할인",
-    code: "AMOUNT5000",
-    discountType: "amount",
-    discountValue: 5000,
-  },
-  {
-    name: "10% 할인",
-    code: "PERCENT10",
-    discountType: "percentage",
-    discountValue: 10,
-  },
-];
+import useCoupons from "./hooks/useCoupons";
 
 export const getRemainingStock = (cart: CartItem[], product: Product): number => {
   const cartItem = cart.find((item) => item.product.id === product.id);
@@ -40,32 +26,42 @@ const App = () => {
   }, []);
 
   const products = useProducts(addNotification);
-  const cart = useCart(addNotification);
-
-  const [coupons, setCoupons] = useState<Coupon[]>(() => {
-    const saved = localStorage.getItem("coupons");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return initialCoupons;
-      }
-    }
-    return initialCoupons;
-  });
 
   useEffect(() => {
-    localStorage.setItem("coupons", JSON.stringify(coupons));
-  }, [coupons]);
+    localStorage.setItem("products", JSON.stringify(products.data));
+  }, [products.data]);
+
+  const cart = useCart(addNotification);
+
+  useEffect(() => {
+    if (cart.data.length > 0) {
+      localStorage.setItem("cart", JSON.stringify(cart.data));
+    } else {
+      localStorage.removeItem("cart");
+    }
+  }, [cart.data]);
+
+  const coupons = useCoupons(addNotification);
+
+  useEffect(() => {
+    localStorage.setItem("coupons", JSON.stringify(coupons.data));
+  }, [coupons.data]);
 
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
-
-  const [isAdmin, setIsAdmin] = useState(false);
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // 각 도메인 금액 formatter
   const formatPrice = (price: number, productId?: string): string => {
@@ -82,21 +78,6 @@ const App = () => {
 
     return `₩${price.toLocaleString()}`;
   };
-
-  useEffect(() => {
-    if (cart.data.length > 0) {
-      localStorage.setItem("cart", JSON.stringify(cart.data));
-    } else {
-      localStorage.removeItem("cart");
-    }
-  }, [cart.data]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
 
   const updateQuantity = useCallback(
     (productId: string, newQuantity: number) => {
@@ -144,7 +125,6 @@ const App = () => {
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {isAdmin ? (
-          // PRODUCTS에 대한 수정, 삭제
           <AdminPage
             // products
             products={products.data}
@@ -152,8 +132,9 @@ const App = () => {
             updateProduct={products.updateProduct}
             deleteProduct={products.deleteProduct}
             //coupons
-            coupons={coupons}
-            setCoupons={setCoupons}
+            coupons={coupons.data}
+            addCoupon={coupons.addCoupon}
+            deleteCoupon={coupons.deleteCoupon}
             setSelectedCoupon={setSelectedCoupon}
             selectedCoupon={selectedCoupon}
             // ETC
@@ -165,7 +146,7 @@ const App = () => {
             // PRODUCTS
             products={products.data}
             // COUPON
-            coupons={coupons}
+            coupons={coupons.data}
             selectedCoupon={selectedCoupon}
             setSelectedCoupon={setSelectedCoupon}
             // CART

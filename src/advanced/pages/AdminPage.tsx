@@ -1,5 +1,5 @@
 import { Coupon, Product } from "../../types";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 interface ProductWithUI extends Product {
   description?: string;
@@ -12,16 +12,16 @@ const AdminPage = ({
   addProduct,
   updateProduct,
   deleteProduct,
-  formatPrice,
-
   //   COUPON
   coupons,
-  setCoupons,
+  addCoupon,
+  deleteCoupon,
   //   COUPONT FORM
   selectedCoupon,
   setSelectedCoupon,
   //   NOTIFICATION
   addNotification,
+  formatPrice,
 }: {
   products: ProductWithUI[];
   addProduct: (newProduct: Omit<ProductWithUI, "id">) => void;
@@ -29,7 +29,8 @@ const AdminPage = ({
   deleteProduct: (productId: string) => void;
 
   coupons: Coupon[];
-  setCoupons: (value: Coupon[]) => void;
+  addCoupon: (newCoupon: Coupon) => void;
+  deleteCoupon: (couponCode: string) => void;
   selectedCoupon: Coupon | null;
   setSelectedCoupon: (value: Coupon | null) => void;
 
@@ -79,29 +80,6 @@ const AdminPage = ({
   };
 
   //coupon
-  const addCoupon = useCallback(
-    (newCoupon: Coupon) => {
-      const existingCoupon = coupons.find((c) => c.code === newCoupon.code);
-      if (existingCoupon) {
-        addNotification("이미 존재하는 쿠폰 코드입니다.", "error");
-        return;
-      }
-      setCoupons((prev) => [...prev, newCoupon]);
-      addNotification("쿠폰이 추가되었습니다.", "success");
-    },
-    [coupons, addNotification]
-  );
-
-  const deleteCoupon = useCallback(
-    (couponCode: string) => {
-      setCoupons((prev) => prev.filter((c) => c.code !== couponCode));
-      if (selectedCoupon?.code === couponCode) {
-        setSelectedCoupon(null);
-      }
-      addNotification("쿠폰이 삭제되었습니다.", "success");
-    },
-    [selectedCoupon, addNotification]
-  );
 
   const handleCouponSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -447,7 +425,12 @@ const AdminPage = ({
                       </div>
                     </div>
                     <button
-                      onClick={() => deleteCoupon(coupon.code)}
+                      onClick={() => {
+                        if (selectedCoupon?.code === coupon.code) {
+                          setSelectedCoupon(null);
+                        }
+                        deleteCoupon(coupon.code);
+                      }}
                       className="text-gray-400 hover:text-red-600 transition-colors"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
