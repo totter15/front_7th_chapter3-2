@@ -1,14 +1,15 @@
 import { useMemo, useCallback } from "react";
 import { CartItem, ProductWithUI, Coupon, Product } from "../../types";
 import SelectList from "../components/ui/SelectList";
-import formatter from "../utils/formatter";
 import { CartIcon } from "../components/icons";
 import { Card } from "../components/ui";
-import CartList from "../components/domain/cart/CartList";
+import CartList from "../components/domain/cartPage/CartList";
 import ProductList from "../components/domain/product/ProductList";
 import { isValidStock } from "../utils/validators";
 import CartHeader from "../components/domain/cartPage/CartHeader";
 import cartModel from "../models/cart";
+import productModel from "../models/product";
+import couponModel from "../models/coupon";
 
 interface CartPageProps {
   products: ProductWithUI[];
@@ -50,39 +51,21 @@ const CartPage = ({
   goAdminPage,
   setSearchTerm,
 }: CartPageProps) => {
-  // 검색어로 상품 필터링 (useMemo로 최적화)
   const filteredProducts = useMemo(() => {
     if (!debouncedSearchTerm) return products;
 
-    const searchLower = debouncedSearchTerm.toLowerCase();
-    return products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(searchLower) || product.description?.toLowerCase().includes(searchLower)
-    );
+    const filteredProducts = productModel.filterSearch(products, debouncedSearchTerm);
+    return filteredProducts;
   }, [products, debouncedSearchTerm]);
 
-  // 쿠폰 선택 목록 생성 (useMemo로 최적화)
   const couponList = useMemo(
-    () => [
-      { label: "쿠폰 선택", value: "" },
-      ...coupons.map((coupon) => ({
-        label: `${coupon.name} (${
-          coupon.discountType === "amount"
-            ? formatter.formatPrice(coupon.discountValue)
-            : formatter.formatPercentage(coupon.discountValue)
-        })`,
-        value: coupon.code,
-      })),
-    ],
+    () => [{ label: "쿠폰 선택", value: "" }, ...couponModel.getCouponList(coupons)],
     [coupons]
   );
 
   const totals = calculateTotal();
-
-  // 할인 금액 계산 (useMemo로 최적화)
   const discountAmount = useMemo(() => totals.totalBeforeDiscount - totals.totalAfterDiscount, [totals]);
 
-  // 쿠폰 적용 핸들러
   const handleApplyCoupon = useCallback(
     (coupon: Coupon) => {
       const currentTotal = calculateTotal().totalAfterDiscount;
@@ -99,7 +82,6 @@ const CartPage = ({
     [cart, addNotification]
   );
 
-  // 장바구니 추가 핸들러
   const handleAddToCart = useCallback(
     (product: Product) => {
       const remainingStock = getRemainingStock(product);

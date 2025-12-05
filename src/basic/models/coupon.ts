@@ -1,4 +1,5 @@
 import { Coupon } from "../../types";
+import formatter from "../utils/formatter";
 
 const addCoupon = (coupons: Coupon[], newCoupon: Coupon) => {
   return [...coupons, newCoupon];
@@ -13,4 +14,15 @@ const checkExistingCoupon = (coupons: Coupon[], newCoupon: Coupon) => {
   return !!existingCoupon;
 };
 
-export default { addCoupon, deleteCoupon, checkExistingCoupon };
+const getCouponList = (coupons: Coupon[]) => {
+  return coupons.map((coupon) => ({
+    label: `${coupon.name} (${
+      coupon.discountType === "amount"
+        ? formatter.formatPrice(coupon.discountValue)
+        : formatter.formatPercentage(coupon.discountValue)
+    })`,
+    value: coupon.code,
+  }));
+};
+
+export default { addCoupon, deleteCoupon, checkExistingCoupon, getCouponList };

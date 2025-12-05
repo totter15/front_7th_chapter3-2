@@ -18,7 +18,6 @@ const App = () => {
   useLocalStorage("products", products.data);
 
   const cart = useCart();
-
   useLocalStorage("cart", cart.data, { removeIfEmpty: true });
 
   const coupons = useCoupons();

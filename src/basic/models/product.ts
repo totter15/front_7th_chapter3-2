@@ -42,6 +42,16 @@ const removeProductDiscount = (
   );
 };
 
+const filterSearch = (products: ProductWithUI[], searchTerm: string) => {
+  if (!searchTerm) return products;
+
+  return products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+};
+
 export default {
   addProduct,
   updateProduct,
@@ -49,4 +59,5 @@ export default {
   updateProductStock,
   addProductDiscount,
   removeProductDiscount,
+  filterSearch,
 };
