@@ -1,7 +1,7 @@
 import { CartItem } from "../../../../types";
 import cartModel from "../../../models/cart";
 import { CartIcon } from "../../icons";
-import CartListItem from "../cartPage/CartListItem";
+import CartListItem from "./CartListItem";
 
 const CartList = ({
   cart,

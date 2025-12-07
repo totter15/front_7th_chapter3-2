@@ -3,13 +3,11 @@ import CouponForm from "./CouponForm";
 import { useState } from "react";
 import couponModel from "../../../models/coupon";
 import { useCoupons } from "../../../hooks/useCoupons";
+import { useNotification } from "../../../hooks/useNotification";
 
-const CouponSection = ({
-  addNotification,
-}: {
-  addNotification: (message: string, type: "error" | "success" | "warning") => void;
-}) => {
+const CouponSection = ({}: {}) => {
   const { coupons, addCoupon, deleteCoupon } = useCoupons();
+  const { addNotification } = useNotification();
 
   const [couponForm, setCouponForm] = useState({
     name: "",

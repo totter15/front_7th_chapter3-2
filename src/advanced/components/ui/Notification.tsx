@@ -1,16 +1,8 @@
-interface Notification {
-  id: string;
-  message: string;
-  type: "error" | "success" | "warning";
-}
+import { useNotification } from "../../hooks/useNotification";
 
-const Notification = ({
-  notifications,
-  setNotifications,
-}: {
-  notifications: Notification[];
-  setNotifications: (value: Notification[]) => void;
-}) => {
+const Notification = () => {
+  const { notifications, setNotifications } = useNotification();
+
   return (
     notifications.length > 0 && (
       <div className="fixed top-20 right-4 z-50 space-y-2 max-w-sm">

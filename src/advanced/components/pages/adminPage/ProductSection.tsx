@@ -3,12 +3,10 @@ import { ProductWithUI } from "../../../../types";
 import ProductForm from "./ProductForm";
 import ProductTable from "./ProductTable";
 import useProducts from "../../../hooks/useProducts";
+import { useNotification } from "../../../hooks/useNotification";
 
-const ProductSection = ({
-  addNotification,
-}: {
-  addNotification: (message: string, type: "error" | "success" | "warning") => void;
-}) => {
+const ProductSection = ({}: {}) => {
+  const { addNotification } = useNotification();
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
 
   const [editingProduct, setEditingProduct] = useState<string | null>(null);

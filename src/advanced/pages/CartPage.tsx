@@ -1,41 +1,42 @@
-import { useMemo, useCallback } from "react";
-import { Coupon, Product } from "../../types";
+import { useMemo, useCallback, useState } from "react";
 import SelectList from "../components/ui/SelectList";
 import { CartIcon } from "../components/icons";
 import { Card } from "../components/ui";
-import CartList from "../components/domain/cartPage/CartList";
-import ProductList from "../components/domain/cartPage/ProductList";
-import { isValidStock } from "../utils/validators";
-import CartHeader from "../components/domain/cartPage/CartHeader";
+import CartList from "../components/pages/cartPage/CartList";
+import ProductList from "../components/pages/cartPage/ProductList";
+import CartHeader from "../components/pages/cartPage/CartHeader";
 import cartModel from "../models/cart";
 import productModel from "../models/product";
 import couponModel from "../models/coupon";
 import { useCoupons } from "../hooks/useCoupons";
 import useProducts from "../hooks/useProducts";
 import { useCart } from "../hooks/useCart";
+import { useNotification } from "../hooks/useNotification";
+import { Coupon, Product } from "../../types";
+import { isValidStock } from "../utils/validators";
+import { useDebounce } from "../utils/hooks/useDebounce";
 
 interface CartPageProps {
-  debouncedSearchTerm: string;
-  addNotification: (message: string, type: "error" | "success" | "warning") => void;
   goAdminPage: () => void;
-  setSearchTerm: (value: string) => void;
 }
 
-const CartPage = ({ debouncedSearchTerm, addNotification, goAdminPage, setSearchTerm }: CartPageProps) => {
+const CartPage = ({ goAdminPage }: CartPageProps) => {
   const {
     cart,
     selectedCoupon,
-    addToCart,
-    updateQuantity,
     removeFromCart,
     applyCoupon,
     calculateTotal,
     getRemainingStock,
+    addToCart,
+    updateQuantity,
     clearCart,
-  } = useCart(); // CartProvider 에서 제공하는 값
-  const { products } = useProducts();
-  const { coupons } = useCoupons();
+  } = useCart();
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const { products } = useProducts();
   const filteredProducts = useMemo(() => {
     if (!debouncedSearchTerm) return products;
 
@@ -43,6 +44,7 @@ const CartPage = ({ debouncedSearchTerm, addNotification, goAdminPage, setSearch
     return filteredProducts;
   }, [products, debouncedSearchTerm]);
 
+  const { coupons } = useCoupons();
   const couponList = useMemo(
     () => [{ label: "쿠폰 선택", value: "" }, ...couponModel.getCouponList(coupons)],
     [coupons]
@@ -50,6 +52,8 @@ const CartPage = ({ debouncedSearchTerm, addNotification, goAdminPage, setSearch
 
   const totals = calculateTotal();
   const discountAmount = useMemo(() => totals.totalBeforeDiscount - totals.totalAfterDiscount, [totals]);
+
+  const { addNotification } = useNotification();
 
   const handleApplyCoupon = useCallback(
     (coupon: Coupon) => {

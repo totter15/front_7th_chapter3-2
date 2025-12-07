@@ -1,15 +1,9 @@
 import { useState } from "react";
-import CouponSection from "../components/domain/adminPage/CouponSection";
-import ProductSection from "../components/domain/adminPage/ProductSection";
-import AdminHeader from "../components/domain/adminPage/AdminHeader";
+import CouponSection from "../components/pages/adminPage/CouponSection";
+import ProductSection from "../components/pages/adminPage/ProductSection";
+import AdminHeader from "../components/pages/adminPage/AdminHeader";
 
-const AdminPage = ({
-  addNotification,
-  goShoppingPage,
-}: {
-  addNotification: (value: string, type: "error" | "success" | "warning") => void;
-  goShoppingPage: () => void;
-}) => {
+const AdminPage = ({ goShoppingPage }: { goShoppingPage: () => void }) => {
   const [activeTab, setActiveTab] = useState<"products" | "coupons">("products");
 
   return (
@@ -21,6 +15,7 @@ const AdminPage = ({
             <h1 className="text-2xl font-bold text-gray-900">관리자 대시보드</h1>
             <p className="text-gray-600 mt-1">상품과 쿠폰을 관리할 수 있습니다</p>
           </div>
+
           <div className="border-b border-gray-200 mb-6">
             <nav className="-mb-px flex space-x-8">
               <button
@@ -46,11 +41,7 @@ const AdminPage = ({
             </nav>
           </div>
 
-          {activeTab === "products" ? (
-            <ProductSection addNotification={addNotification} />
-          ) : (
-            <CouponSection addNotification={addNotification} />
-          )}
+          {activeTab === "products" ? <ProductSection /> : <CouponSection />}
         </div>
       </main>
     </>
