@@ -1,3 +1,4 @@
 import CartIcon from "./CartIcon";
+import TrashIcon from "./TrashIcon";
 
-export { CartIcon };
+export { CartIcon, TrashIcon };
