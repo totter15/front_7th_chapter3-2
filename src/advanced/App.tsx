@@ -3,7 +3,6 @@ import Notification from "./components/ui/Notification";
 import AdminPage from "./pages/AdminPage";
 import CartPage from "./pages/CartPage";
 import { CartProvider } from "./hooks/useCart";
-import { useDebounce } from "./utils/hooks/useDebounce";
 import { NotificationProvider } from "./hooks/useNotification";
 import { CouponProvider } from "./hooks/useCoupons";
 import { ProductProvider } from "./hooks/useProducts";

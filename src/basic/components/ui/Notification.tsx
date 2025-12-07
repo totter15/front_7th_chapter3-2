@@ -1,15 +1,11 @@
-interface Notification {
-  id: string;
-  message: string;
-  type: "error" | "success" | "warning";
-}
+import { Notification as NotificationType } from "../../types";
 
 const Notification = ({
   notifications,
   setNotifications,
 }: {
-  notifications: Notification[];
-  setNotifications: (value: Notification[]) => void;
+  notifications: NotificationType[];
+  setNotifications: React.Dispatch<React.SetStateAction<NotificationType[]>>;
 }) => {
   return (
     notifications.length > 0 && (
@@ -23,7 +19,9 @@ const Notification = ({
           >
             <span className="mr-2">{notif.message}</span>
             <button
-              onClick={() => setNotifications((prev) => prev.filter((n) => n.id !== notif.id))}
+              onClick={() =>
+                setNotifications((prev: NotificationType[]) => prev.filter((n: NotificationType) => n.id !== notif.id))
+              }
               className="text-white hover:text-gray-200"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

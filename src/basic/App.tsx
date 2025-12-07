@@ -7,7 +7,7 @@ import useCart from "./hooks/useCart";
 import useCoupons from "./hooks/useCoupons";
 import { useDebounce } from "./utils/hooks/useDebounce";
 import { useLocalStorage } from "./utils/hooks/useLocalStorage";
-import { useNotification } from "./utils/hooks/useNotification";
+import { useNotification } from "./hooks/useNotification";
 
 const App = () => {
   // Notification 관리

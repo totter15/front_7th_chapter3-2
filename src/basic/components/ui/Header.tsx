@@ -43,9 +43,9 @@ const Header = ({
             {hasSearch && (
               <div className="ml-8 flex-1 max-w-md">
                 <Input
-                  input={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  placeholder={searchPlaceholder}
+                  input={searchValue || ""}
+                  onChange={(e) => setSearchValue?.(e.target.value)}
+                  placeholder={searchPlaceholder || "검색"}
                 />
               </div>
             )}
