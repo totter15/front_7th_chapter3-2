@@ -3,7 +3,7 @@ import { Notification } from "../../types";
 
 interface NotificationContextType {
   notifications: Notification[];
-  setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
+  deleteNotification: (id: string) => void;
   addNotification: (message: string, type?: "error" | "success" | "warning") => void;
 }
 
@@ -29,8 +29,12 @@ export const NotificationProvider = ({ children, duration = 3000 }: Notification
     [duration]
   );
 
+  const deleteNotification = useCallback((id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
   return (
-    <NotificationContext.Provider value={{ notifications, setNotifications, addNotification }}>
+    <NotificationContext.Provider value={{ notifications, deleteNotification, addNotification }}>
       {children}
     </NotificationContext.Provider>
   );

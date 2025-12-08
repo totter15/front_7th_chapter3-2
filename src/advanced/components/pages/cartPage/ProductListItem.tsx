@@ -1,17 +1,17 @@
 import { Product } from "../../../../types";
 import formatter from "../../../utils/formatter";
+import { useCart } from "../../../hooks/useCart";
 
 const ProductListItem = ({
   product,
   handleAddToCart,
-  getRemainingStock,
 }: {
   product: Product & { description?: string; isRecommended?: boolean };
   handleAddToCart: () => void;
-  getRemainingStock: (product: Product) => number;
 }) => {
+  const { getRemainingStock } = useCart();
   const remainingStock = getRemainingStock(product);
-  console.log(remainingStock);
+
   return (
     <div
       key={product.id}

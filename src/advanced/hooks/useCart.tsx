@@ -87,6 +87,7 @@ export function CartProvider({ children }: CartProviderProps) {
       value={{
         cart,
         selectedCoupon,
+
         addToCart,
         removeFromCart,
         updateQuantity,
